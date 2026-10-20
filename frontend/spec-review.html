@@ -1,0 +1,25 @@
+<!doctype html><html lang="zh-CN"><meta charset="utf-8"><title>学习打卡追踪器 · 规格与数据模型</title><style>body{margin:0;background:#fbfaf7;color:#262939;font:16px "Microsoft YaHei",sans-serif;padding:45px 55px}h1{font-size:34px;margin:10px 0 15px}h2{font-size:23px;color:#6955cc}p,li{line-height:1.9}small{color:#777d8b}.columns{display:grid;grid-template-columns:1fr 1.2fr;gap:45px}pre{font:13px/1.8 Consolas,"Microsoft YaHei",monospace;background:#f1eef8;padding:20px;white-space:pre-wrap;margin:0}.rule{border-bottom:1px solid #e4dfeb;padding:10px 0 15px}</style><small>设计文档与实现依据 · 当前工作区实际源码</small><h1>学习打卡追踪器：规格与数据模型</h1><p>摘要来源：docs/02-Spec.md、docs/04-数据库设计.md、backend/models.py。此页用于项目设计展示，不代表导师已点评。</p><div class="columns"><section><h2>关键验收规则</h2><div class="rule"><h3>每日唯一</h3><p>同计划同日期最多一条记录。重复创建返回409，数据库记录数不增加。</p></div><div class="rule"><h3>日期校验</h3><p>不允许未来日期或计划区间外日期。服务端以北京时间今天为准。</p></div><div class="rule"><h3>统计口径</h3><p>跨计划按日期去重计算学习天数。时长相加，连续天数按连续日期计算。</p></div><div class="rule"><h3>证据保护</h3><p>修改计划区间不得排除已有记录。含记录计划不可直接删除。</p></div></section><section><h2>Pydantic 输入模型（实际文件）</h2><pre>from datetime import date
+
+from pydantic import BaseModel, ConfigDict, Field
+
+
+class InputModel(BaseModel):
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
+
+
+class PlanInput(InputModel):
+    name: str = Field(min_length=1, max_length=60)
+    start_date: date
+    days: int = Field(ge=1, le=90, strict=True)
+    target_minutes: int = Field(ge=5, le=480, strict=True)
+
+
+class RecordInput(InputModel):
+    plan_id: int = Field(ge=1, strict=True)
+    study_date: date
+    topic: str = Field(min_length=1, max_length=120)
+    minutes: int = Field(ge=1, le=720, strict=True)
+    takeaway: str = Field(min_length=1, max_length=1500)
+    next_step: str = Field(default="", max_length=1000)
+    shared: bool = False
+</pre></section></div></html>
