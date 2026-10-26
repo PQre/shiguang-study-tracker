@@ -1,0 +1,49 @@
+name: Deploy online demo
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'frontend/**'
+      - 'demo/**'
+      - 'scripts/build_demo.py'
+      - 'scripts/test_demo.cjs'
+      - '.github/workflows/pages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Build demo
+        run: python3 scripts/build_demo.py
+      - name: Verify demo behavior
+        run: node scripts/test_demo.cjs
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: .site
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/deploy-pages@v4
+        id: deployment

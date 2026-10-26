@@ -6,3 +6,10 @@ __pycache__
 tests
 docs
 evidence
+.git
+.github
+.site
+.test-work
+.test-temp-*
+demo
+scripts
