@@ -16,9 +16,15 @@ from backend.main import create_app
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--demo", action="store_true")
+    parser.add_argument("--ai-only", action="store_true", help="仅运行AI服务，不开放打卡数据库接口")
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=8000)
     args = parser.parse_args()
+    if args.ai_only:
+        from backend.ai import create_ai_app
+        print(f"拾光AI服务：http://{args.host}:{args.port}/api/ai/status", flush=True)
+        uvicorn.run(create_ai_app(), host=args.host, port=args.port)
+        raise SystemExit(0)
     if args.demo:
         from seed_demo import seed_demo
         seed_demo(ROOT / "data" / "demo.db")

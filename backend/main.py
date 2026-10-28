@@ -15,6 +15,7 @@ from fastapi.staticfiles import StaticFiles
 from .database import connection, initialize, read_records
 from .models import PlanInput, RecordInput
 from .stats import summarize, today_shanghai
+from .ai import install_ai, ai_origin_allowed
 
 ROOT = Path(__file__).resolve().parents[1]
 FRONTEND = ROOT / "frontend"
@@ -57,7 +58,7 @@ def create_app(db_path=None, demo=False):
         if request.method in {"POST", "PUT", "DELETE", "PATCH"}:
             origin = request.headers.get("origin")
             # 浏览器跨站请求不得写入本地数据。无 Origin 的 CLI /测试客户端可以访问。
-            if origin and urlparse(origin).netloc != request.headers.get("host"):
+            if origin and urlparse(origin).netloc != request.headers.get("host") and not ai_origin_allowed(request):
                 return Response('{"detail":"禁止跨站写入请求"}', status_code=403,
                                 media_type="application/json")
         response = await call_next(request)
@@ -190,6 +191,7 @@ def create_app(db_path=None, demo=False):
         return FileResponse(FRONTEND / "index.html")
 
     app.mount("/static", StaticFiles(directory=FRONTEND), name="static")
+    install_ai(app)
     return app
 
 

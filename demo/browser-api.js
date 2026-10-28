@@ -10,6 +10,8 @@
   var SHANGHAI_OFFSET_MIN = 8 * 60;
   var lessonsPromise = null;
   var originalFetch = window.fetch ? window.fetch.bind(window) : null;
+  // Only AI uses the real server; ordinary demo records remain browser-local.
+  window.TrackerRemoteFetch = originalFetch;
 
   function todayShanghai() {
     return new Date(Date.now() + SHANGHAI_OFFSET_MIN * 60000).toISOString().slice(0, 10);

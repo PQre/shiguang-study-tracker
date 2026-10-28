@@ -1,5 +1,6 @@
 const {createApp}=Vue;
 createApp({
+ mixins:[TrackerAssistant],
  data(){return {page:'overview',health:{today:'',demo:false},plans:[],records:[],stats:{days:0,minutes:0,streak:0,longest_streak:0,shared_days:0,daily:[]},lessons:[],lesson:{},selectedPlan:'',search:'',week:0,error:'',notice:'',modal:'',editId:null,saving:false,formError:'',planForm:{},recordForm:{},shareDate:'',shareReflection:'',navigation:[{id:'overview',label:'学习概览',icon:'◈'},{id:'plans',label:'学习计划',icon:'▤'},{id:'shares',label:'知识点分享',icon:'▧'},{id:'records',label:'打卡记录',icon:'◷'}],subtitles:{overview:'把每天的学习和实践，积累成自己的成长记录。',plans:'拆成每天可以完成的小目标，按自己的节奏推进。',shares:'阅读、实践、写下自己的发现，再分享给更多人。',records:'回看每一次积累，找到下一步的方向。'}}},
  watch:{page(){window.scrollTo({top:0,behavior:"instant"});this.error="";this.notice=""},lesson(value){this.shareDate=value.share_date||this.health.today}},
  computed:{
@@ -16,7 +17,7 @@ createApp({
   async loadRecords(){try{[this.records,this.stats]=await Promise.all([this.api('/records'+this.query),this.api('/stats'+this.query)])}catch(e){this.error=e.message}},
   prettyDate(d){if(!d)return '加载中';const day=new Date(d+'T00:00:00Z');return d.replaceAll('-','.')+'  '+['周日','周一','周二','周三','周四','周五','周六'][day.getUTCDay()]},
   openPlan(p){this.modal='plan';this.editId=p?.id||null;this.formError='';this.planForm=p?{name:p.name,start_date:p.start_date,days:p.days,target_minutes:p.target_minutes}:{name:'',start_date:this.health.today,days:28,target_minutes:45};this.$refs.formDialog.showModal()},
-  openRecord(r){if(!this.plans.length){this.page='plans';return}this.modal='record';this.editId=r?.id||null;this.formError='';this.recordForm=r?{plan_id:r.plan_id,study_date:r.study_date,topic:r.topic,minutes:r.minutes,takeaway:r.takeaway,next_step:r.next_step,shared:r.shared}:{plan_id:Number(this.selectedPlan)||this.plans[0].id,study_date:this.health.today,topic:'',minutes:45,takeaway:'',next_step:'',shared:false};this.$refs.formDialog.showModal()},
+  openRecord(r){if(!this.plans.length){this.page='plans';return}this.modal='record';this.editId=r?.id||null;this.formError='';this.aiApplied='';this.recordForm=r?{plan_id:r.plan_id,study_date:r.study_date,topic:r.topic,minutes:r.minutes,takeaway:r.takeaway,next_step:r.next_step,shared:r.shared}:{plan_id:Number(this.selectedPlan)||this.plans[0].id,study_date:this.health.today,topic:'',minutes:45,takeaway:'',next_step:'',shared:false};this.$refs.formDialog.showModal()},
   closeDialog(){if(!this.saving)this.$refs.formDialog.close()},
   async saveForm(){if(this.saving)return;this.saving=true;this.formError='';try{const base=this.modal==='plan'?'/plans':'/records';const payload=this.modal==='plan'?this.planForm:this.recordForm;await this.api(base+(this.editId?'/'+this.editId:''),this.editId?'PUT':'POST',payload);this.$refs.formDialog.close();this.notice='已保存。学习记录以你填写的实际内容为准。';await this.refresh();setTimeout(()=>this.notice='',5000)}catch(e){this.formError=e.message}finally{this.saving=false}},
   async deletePlan(p){if(!confirm('确认删除计划“'+p.name+'”？含有打卡记录的计划无法删除。'))return;try{await this.api('/plans/'+p.id,'DELETE');await this.refresh()}catch(e){this.error=e.message}},

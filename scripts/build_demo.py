@@ -10,7 +10,7 @@ FRONTEND = ROOT / "frontend"
 def build():
     OUTPUT.mkdir(exist_ok=True)
     (OUTPUT / "static").mkdir(exist_ok=True)
-    for relative in ["styles.css", "lessons.json", "vendor/vue.global.prod.js", "vendor/Vue-LICENSE.txt"]:
+    for relative in ["styles.css", "assistant.css", "assistant.js", "lessons.json", "vendor/vue.global.prod.js", "vendor/Vue-LICENSE.txt"]:
         destination = OUTPUT / "static" / relative
         destination.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(FRONTEND / relative, destination)

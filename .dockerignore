@@ -13,3 +13,5 @@ evidence
 .test-temp-*
 demo
 scripts
+.env
+.env.*
